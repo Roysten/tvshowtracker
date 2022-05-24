@@ -1,0 +1,7 @@
+# Ignore compiled binaries
+/bin/
+/obj/
+/.vscode/
+/.cache/
+/app_state.json
+/tvshowtracker.log
