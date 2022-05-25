@@ -130,7 +130,7 @@ static void handle_request_search_show(ULONG_PTR data)
 
 	size_t request_uri_buf_len = urlencoded_buf_len + 200;
 	wchar_t *request_uri_buf = calloc(request_uri_buf_len, sizeof(wchar_t));
-    swprintf(request_uri_buf, request_uri_buf_len, L"/3/search/tv?api_key=%s&language=en-US&page=1&query=%ls", str(REST_API_KEY), urlencoded_buf);
+    swprintf(request_uri_buf, request_uri_buf_len, L"/3/search/tv?api_key=%s&language=en-US&page=1&query=%ls", REST_API_KEY, urlencoded_buf);
 	free(urlencoded_buf);
     LOG("Request: %ls", request_uri_buf);
 
@@ -234,7 +234,7 @@ static void handle_request_show_info(ULONG_PTR data)
     LOG("APC for: %" PRIi64, context_info->show_id);
 
     wchar_t request_uri_buf[256];
-    swprintf(request_uri_buf, ARRAYSIZE(request_uri_buf), L"/3/tv/%" PRIi64 "?api_key=%s&language=en-US", context_info->show_id, str(REST_API_KEY));
+    swprintf(request_uri_buf, ARRAYSIZE(request_uri_buf), L"/3/tv/%" PRIi64 "?api_key=%s&language=en-US", context_info->show_id, REST_API_KEY);
     LOG("Request: %ls", request_uri_buf);
 
     bool ok = REST_CLIENT_get_resource(&context_info->requester_thread->client, request_uri_buf, L"GET");
@@ -258,7 +258,7 @@ static void handle_request_show_info(ULONG_PTR data)
 	show->episodes = vec_create(Tv_show_episode);
 	for (int i = 0; i < show->seasons.len; ++i) {
 		Tv_show_season *season = vec_get(Tv_show_season, show->seasons, i);
-		swprintf(request_uri_buf, ARRAYSIZE(request_uri_buf), L"/3/tv/%" PRIi64 "/season/%d?api_key=%s&language=en-US", show->id, season->season_number, str(REST_API_KEY));
+		swprintf(request_uri_buf, ARRAYSIZE(request_uri_buf), L"/3/tv/%" PRIi64 "/season/%d?api_key=%s&language=en-US", show->id, season->season_number, REST_API_KEY);
 		LOG("Request: %ls", request_uri_buf);
 		ok = REST_CLIENT_get_resource(&context_info->requester_thread->client, request_uri_buf, L"GET");
 		if (!ok || !parse_show_info_season_json(context_info->requester_thread->client.buf, show, season)) {
