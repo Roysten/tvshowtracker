@@ -16,15 +16,15 @@ EXE = Win32App.exe
 
 # Compiler flags. Compile ANSI build only if CHARSET=ANSI.
 ifeq (${CHARSET}, ANSI)
-  CFLAGS =-g -Os -std=gnu99 -D _WIN32_IE=0x0500 -D WINVER=0x0500 ${WARNS} -D WIN32_LEAN_AND_MEAN -Iinclude
+  CFLAGS =-Os -std=gnu99 -D _WIN32_IE=0x0500 -D WINVER=0x0500 ${WARNS} -D WIN32_LEAN_AND_MEAN -Iinclude
 else
-  CFLAGS =-g -Os -std=gnu99 -D UNICODE -D _UNICODE -D _WIN32_IE=0x0500 -D WINVER=0x0500 ${WARNS} -D WIN32_LEAN_AND_MEAN -Iinclude
+  CFLAGS =-Os -std=gnu99 -D UNICODE -D _UNICODE -D _WIN32_IE=0x0500 -D WINVER=0x0500 ${WARNS} -D WIN32_LEAN_AND_MEAN -Iinclude
 endif
 
 # Linker flags
-LDFLAGS =-lcomctl32 -lgdi32 -lwininet -Wl,--subsystem,windows
+# LDFLAGS =-lcomctl32 -lgdi32 -lwininet -Wl,--subsystem,windows
 # Without symbols
-# LDFLAGS =-s -lcomctl32 -lgdi32 -lwininet -Wl,--subsystem,windows
+LDFLAGS =-s -lcomctl32 -lgdi32 -lwininet -Wl,--subsystem,windows
 
 .PHONY: all clean
 
