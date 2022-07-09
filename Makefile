@@ -49,7 +49,7 @@ bin obj:
 
 # Compile object files for executable
 obj/%.o: src/%.c | obj
-	${CC} -DREST_API_KEY=${REST_API_KEY} ${CFLAGS} -c "$<" -o "$@"
+	${CC} -DREST_API_KEY=L${REST_API_KEY} ${CFLAGS} -c "$<" -o "$@"
 
 obj/%.o: src/rest/%.c | obj
 	${CC} ${CFLAGS} -c "$<" -o "$@"
