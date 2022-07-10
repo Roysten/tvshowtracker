@@ -1,13 +1,12 @@
 #include "App.h"
-#include "Tv_show.h"
 
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "json/pdjson.h"
-
 #include "Logger.h"
+#include "Tv_show.h"
 #include "util/str_util.h"
 #include "util/vec.h"
 
@@ -17,6 +16,7 @@ static bool load_tv_show_seasons(json_stream *stream, Tv_show *show);
 static bool load_tv_show_season(json_stream *stream, Tv_show *show, Tv_show_season *season);
 static bool load_tv_show_season_episodes(json_stream *stream, Tv_show *show, Tv_show_season *season);
 static bool load_tv_show_season_episode(json_stream *stream, Tv_show_episode *episode);
+static void write_json_string(FILE * f, const char* str);
 
 bool APP_from_file(App *app, const char *path)
 {
@@ -68,12 +68,16 @@ bool APP_to_file(App *app, const char *path)
 		Tv_show *show = vec_get(Tv_show, app->tv_shows, i);
 		int episode_idx = 0;
 		char *converted_name = STR_UTIL_convert_utf8(show->name);
-		fprintf(f, "{\"name\":\"%s\",\"id\":%" PRId64 ",\"last_sync\":%" PRId64 ",\"seasons\":[", converted_name, show->id, show->last_sync);
+		fprintf(f, "{\"name\":");
+		write_json_string(f, converted_name);
+		fprintf(f, ",\"id\":%" PRId64 ",\"last_sync\":%" PRId64 ",\"seasons\":[", show->id, show->last_sync);
 		free(converted_name);
 		for (size_t j = 0; j < show->seasons.len; ++j) {
 			Tv_show_season *season = vec_get(Tv_show_season, show->seasons, j);
 			converted_name = STR_UTIL_convert_utf8(season->name);
-			fprintf(f, "{\"name\":\"%s\",\"air_date\":%" PRId64 ",\"season_number\":%d,\"episodes\":[", converted_name, season->air_date, season->season_number);
+			fprintf(f, "{\"name\":");
+			write_json_string(f, converted_name);
+			fprintf(f, ",\"air_date\":%" PRId64 ",\"season_number\":%d,\"episodes\":[", season->air_date, season->season_number);
 			free(converted_name);
 			int start = episode_idx;
 			for (; episode_idx < show->episodes.len; ++episode_idx) {
@@ -87,7 +91,9 @@ bool APP_to_file(App *app, const char *path)
 					fputs(",", f);
 				}
 				converted_name = STR_UTIL_convert_utf8(episode->name);
-				fprintf(f, "{\"name\":\"%s\",\"air_date\":%" PRId64 ",\"season_number\":%d,\"episode_number\":%d}", converted_name, episode->air_date, episode->season_number, episode->season_episode_number);
+				fprintf(f, "{\"name\":");
+				write_json_string(f, converted_name);
+				fprintf(f, ",\"air_date\":%" PRId64 ",\"season_number\":%d,\"episode_number\":%d}", episode->air_date, episode->season_number, episode->season_episode_number);
 				free(converted_name);
 			}
 			if (j < show->seasons.len - 1) {
@@ -259,4 +265,27 @@ static bool load_tv_show_season_episode(json_stream *stream, Tv_show_episode *ep
 		}
 	}
 	return true;
+}
+
+static void write_json_string(FILE * f, const char* str)
+{
+	fputc('"', f);
+	for (const char *c = str; *c != '\0'; ++c) {
+		switch(*c) {
+			case '"':
+			case '\\':
+			case '/':
+			case '\b':
+			case '\f':
+			case '\n':
+			case '\r':
+			case '\t':
+				fputc('\\', f);
+				break;
+			default:
+				break;
+		}
+		fputc(*c, f);
+	}
+	fputc('"', f);
 }
