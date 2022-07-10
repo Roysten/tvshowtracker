@@ -83,6 +83,7 @@ static void on_tv_show_refreshed(bool success, Tv_show * show);
 static void on_tv_shows_refresh(void);
 static void on_tv_shows_refreshed(void);
 static void set_controls_enabled(bool enabled);
+static void on_tv_show_delete(void);
 
 /* Register a class for our main window */
 BOOL RegisterMainWindowClass()
@@ -199,6 +200,9 @@ static LRESULT CALLBACK window_event_loop(HWND hwnd, UINT msg, WPARAM w_param, L
 				case ID_MENU_REFRESH_SHOW:
 					on_tv_show_refresh();
 					break;
+				case ID_MENU_DELETE_SHOW:
+					on_tv_show_delete();
+					break;
 			}
 			break;
 		}
@@ -210,6 +214,7 @@ static LRESULT CALLBACK window_event_loop(HWND hwnd, UINT msg, WPARAM w_param, L
 
 				HMENU menu = CreatePopupMenu();
 				AppendMenu(menu, MF_STRING, ID_MENU_REFRESH_SHOW, L"Refresh");
+				AppendMenu(menu, MF_STRING, ID_MENU_DELETE_SHOW, L"Delete");
 				TrackPopupMenu(menu, TPM_TOPALIGN | TPM_LEFTALIGN, LOWORD(l_param), HIWORD(l_param), 0, hwnd, NULL);
 				DestroyMenu(menu);
 				break;
@@ -437,7 +442,7 @@ static void on_tv_show_selected(Listview *listview)
 	LISTVIEW_column_auto_width_header(&listview_episodes, i);
 }
 
-unsigned on_listview_episodes_draw_item(LPNMLVCUSTOMDRAW custom_draw)
+static unsigned on_listview_episodes_draw_item(LPNMLVCUSTOMDRAW custom_draw)
 {
 	switch(custom_draw->nmcd.dwDrawStage) {
 		case CDDS_PREPAINT:
@@ -453,13 +458,14 @@ unsigned on_listview_episodes_draw_item(LPNMLVCUSTOMDRAW custom_draw)
 	return CDRF_DODEFAULT;
 }
 
-void on_tv_show_refresh(void) {
+static void on_tv_show_refresh(void)
+{
 	Tv_show *show = vec_get(Tv_show, app.tv_shows, LISTVIEW_get_selected_index(&listview_shows));
 	LOG("Refreshing show: %d", show->id);
 	REQUESTER_THREAD_get_show_info(&requester_thread, show->id, on_tv_show_refreshed);
 }
 
-void on_tv_show_refreshed(bool success, Tv_show *show)
+static void on_tv_show_refreshed(bool success, Tv_show *show)
 {
 	if (!success) {
 		LOG("Refreshing show failed");
@@ -509,4 +515,14 @@ static void set_controls_enabled(bool enabled)
 	EnableWindow(listbox_search_suggestions.control, enabled);
 	EnableWindow(textbox_search_show.control, enabled);
 	EnableWindow(button_add.control, enabled);
+}
+
+static void on_tv_show_delete()
+{
+	size_t show_index = LISTVIEW_get_selected_index(&listview_shows);
+	Tv_show *show = vec_get(Tv_show, app.tv_shows, show_index);
+	TV_SHOW_destroy(show);
+	vec_erase(Tv_show, app.tv_shows, show_index);
+	LISTVIEW_set_item_count(&listview_shows, vec_size(app.tv_shows));
+	app.dirty = true;
 }

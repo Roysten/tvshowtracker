@@ -58,6 +58,7 @@ void LISTVIEW_clear_groups(Listview *listview)
 
 void LISTVIEW_set_item_count(Listview *listview, int item_count)
 {
+	ListView_DeleteAllItems(listview->control);
 	ListView_SetItemCount(listview->control, item_count);
 	SendMessage(listview->control, WM_SETREDRAW, FALSE, 0);
 	LVITEM item = {0};

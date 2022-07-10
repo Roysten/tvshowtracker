@@ -24,6 +24,11 @@ struct Vec
     ((type*) (vec).data)[(vec).len++] = val; \
 } while (false)
 
+#define vec_erase(type, vec, idx) do { \
+    memmove(vec_get(type, vec, idx), vec_get(type, vec, idx + 1), (vec_size(vec) - (idx + 1)) * sizeof(type)); \
+    (vec).len -= 1; \
+} while (false)
+
 #define vec_size(vec) (vec).len
 
 #define vec_destroy(vec) do { \

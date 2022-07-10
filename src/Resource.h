@@ -16,6 +16,7 @@
 #define ID_BUTTON_ADD                   40009
 #define ID_LISTVIEW_EPISODES            40010
 #define ID_MENU_REFRESH_SHOW            40011
+#define ID_MENU_DELETE_SHOW             40012
 
 #ifndef IDC_STATIC
   #define IDC_STATIC                    -1
