@@ -4,7 +4,7 @@
 OBJS = obj/About_dialog.o obj/Main_window.o obj/Resource.o obj/Win_main.o \
 	obj/Rest_client.o obj/Logger.o obj/Listbox.o obj/Textbox.o obj/Statusbar.o \
 	obj/Groupbox.o obj/pdjson.o obj/Tv_show.o obj/Button.o obj/Requester_thread.o \
-	obj/App.o obj/str_util.o obj/Listview.o
+	obj/App.o obj/str_util.o obj/Listview.o obj/Json_writer.o
 
 # Warnings to be raised by the C compiler
 WARNS = -Wall -Wpedantic -Wno-variadic-macros -Wno-pedantic-ms-format -Wno-overlength-strings

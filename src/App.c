@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "json/Json_writer.h"
 #include "json/pdjson.h"
 #include "Logger.h"
 #include "Tv_show.h"
@@ -16,7 +17,6 @@ static bool load_tv_show_seasons(json_stream *stream, Tv_show *show);
 static bool load_tv_show_season(json_stream *stream, Tv_show *show, Tv_show_season *season);
 static bool load_tv_show_season_episodes(json_stream *stream, Tv_show *show, Tv_show_season *season);
 static bool load_tv_show_season_episode(json_stream *stream, Tv_show_episode *episode);
-static void write_json_string(FILE * f, const char* str);
 
 bool APP_from_file(App *app, const char *path)
 {
@@ -63,53 +63,50 @@ bool APP_to_file(App *app, const char *path)
 		return false;
 	}
 
-	fprintf(f, "{\"tv_shows\":[");
+	Json_object_writer elem_root;
+	JSON_OBJECT_WRITER_init(&elem_root, f);
+	Json_array_writer elem_tv_shows_array = JSON_OBJECT_WRITER_add_array(&elem_root, "tv_shows");
+
 	for (size_t i = 0; i < app->tv_shows.len; ++i) {
 		Tv_show *show = vec_get(Tv_show, app->tv_shows, i);
 		int episode_idx = 0;
-		char *converted_name = STR_UTIL_convert_utf8(show->name);
-		fprintf(f, "{\"name\":");
-		write_json_string(f, converted_name);
-		fprintf(f, ",\"id\":%" PRId64 ",\"last_sync\":%" PRId64 ",\"seasons\":[", show->id, show->last_sync);
-		free(converted_name);
+
+		Json_object_writer elem_tv_show_object = JSON_ARRAY_WRITER_add_object(&elem_tv_shows_array);
+		JSON_OBJECT_WRITER_add_wstr(&elem_tv_show_object, "name", show->name);
+		JSON_OBJECT_WRITER_add_int(&elem_tv_show_object, "id", show->id);
+		JSON_OBJECT_WRITER_add_int(&elem_tv_show_object, "last_sync", show->last_sync);
+		Json_array_writer elem_tv_show_seasons_array = JSON_OBJECT_WRITER_add_array(&elem_tv_show_object, "seasons");
+
 		for (size_t j = 0; j < show->seasons.len; ++j) {
 			Tv_show_season *season = vec_get(Tv_show_season, show->seasons, j);
-			converted_name = STR_UTIL_convert_utf8(season->name);
-			fprintf(f, "{\"name\":");
-			write_json_string(f, converted_name);
-			fprintf(f, ",\"air_date\":%" PRId64 ",\"season_number\":%d,\"episodes\":[", season->air_date, season->season_number);
-			free(converted_name);
-			int start = episode_idx;
+			Json_object_writer elem_tv_show_season_object = JSON_ARRAY_WRITER_add_object(&elem_tv_show_seasons_array);
+			JSON_OBJECT_WRITER_add_wstr(&elem_tv_show_season_object, "name", season->name);
+			JSON_OBJECT_WRITER_add_int(&elem_tv_show_season_object, "air_date", season->air_date);
+			JSON_OBJECT_WRITER_add_int(&elem_tv_show_season_object, "season_number", season->season_number);
+			Json_array_writer elem_tv_show_season_episodes_array = JSON_OBJECT_WRITER_add_array(&elem_tv_show_season_object, "episodes");
+
 			for (; episode_idx < show->episodes.len; ++episode_idx) {
 				Tv_show_episode *episode = vec_get(Tv_show_episode, show->episodes, episode_idx);
 				if (episode->season_number != season->season_number) {
-					fprintf(f, "]}");
 					break;
 				}
 
-				if (episode_idx != start) {
-					fputs(",", f);
-				}
-				converted_name = STR_UTIL_convert_utf8(episode->name);
-				fprintf(f, "{\"name\":");
-				write_json_string(f, converted_name);
-				fprintf(f, ",\"air_date\":%" PRId64 ",\"season_number\":%d,\"episode_number\":%d}", episode->air_date, episode->season_number, episode->season_episode_number);
-				free(converted_name);
+				Json_object_writer elem_tv_show_season_episode_object = JSON_ARRAY_WRITER_add_object(&elem_tv_show_season_episodes_array);
+				JSON_OBJECT_WRITER_add_wstr(&elem_tv_show_season_episode_object, "name", episode->name);
+				JSON_OBJECT_WRITER_add_int(&elem_tv_show_season_episode_object, "air_date", episode->air_date);
+				JSON_OBJECT_WRITER_add_int(&elem_tv_show_season_episode_object, "season_number", episode->season_number);
+				JSON_OBJECT_WRITER_add_int(&elem_tv_show_season_episode_object, "episode_number", episode->season_episode_number);
+				JSON_OBJECT_WRITER_close(&elem_tv_show_season_episode_object);
 			}
-			if (j < show->seasons.len - 1) {
-				fprintf(f, ",");
-			} else {
-				fprintf(f, "]}");
-			}
+			JSON_ARRAY_WRITER_close(&elem_tv_show_season_episodes_array);
+			JSON_OBJECT_WRITER_close(&elem_tv_show_season_object);
 		}
-		
-		if (i < app->tv_shows.len - 1) {
-			fprintf(f, "]},");
-		} else {
-			fprintf(f, "]}");
-		}
+		JSON_ARRAY_WRITER_close(&elem_tv_show_seasons_array);
+		JSON_OBJECT_WRITER_close(&elem_tv_show_object);
 	}
-	fprintf(f, "]}");
+
+	JSON_ARRAY_WRITER_close(&elem_tv_shows_array);
+	JSON_OBJECT_WRITER_close(&elem_root);
 	fclose(f);
 
 	return true;
@@ -265,27 +262,4 @@ static bool load_tv_show_season_episode(json_stream *stream, Tv_show_episode *ep
 		}
 	}
 	return true;
-}
-
-static void write_json_string(FILE * f, const char* str)
-{
-	fputc('"', f);
-	for (const char *c = str; *c != '\0'; ++c) {
-		switch(*c) {
-			case '"':
-			case '\\':
-			case '/':
-			case '\b':
-			case '\f':
-			case '\n':
-			case '\r':
-			case '\t':
-				fputc('\\', f);
-				break;
-			default:
-				break;
-		}
-		fputc(*c, f);
-	}
-	fputc('"', f);
 }
