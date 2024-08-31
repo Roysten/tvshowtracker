@@ -13,7 +13,8 @@ struct Tv_show
 {
     int64_t id;
     const wchar_t *name;
-    time_t last_sync; 
+    const wchar_t *first_air_date;
+    time_t last_sync;
     Vec seasons;
     Vec episodes;
 };
@@ -33,7 +34,7 @@ struct Tv_show_episode
     time_t air_date;
 };
 
-bool TV_SHOW_create(Tv_show *tv_show, int64_t id, const char *name);
+bool TV_SHOW_create(Tv_show *tv_show, int64_t id, const char *name, const char *first_air_date);
 
 void TV_SHOW_destroy(Tv_show *tv_show);
 

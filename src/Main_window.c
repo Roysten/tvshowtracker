@@ -131,7 +131,7 @@ static LRESULT CALLBACK window_event_loop(HWND hwnd, UINT msg, WPARAM w_param, L
 			STATUSBAR_on_resize(&statusbar);
 			break;
 		case WM_NOTIFY: {
-			WORD id = LOWORD(w_param);	
+			WORD id = LOWORD(w_param);
 			unsigned code = ((LPNMHDR) l_param)->code;
 			if (id == ID_LISTVIEW_EPISODES) {
 				if (code == NM_CUSTOMDRAW) {
@@ -305,7 +305,13 @@ static void on_search_completed(bool success)
 
 	LISTBOX_reset_content(&listbox_search_suggestions);
 	for (size_t i = 0; i < ARRAYSIZE(search_suggestions) && search_suggestions[i].id != 0; ++i) {
-		LISTBOX_add_string(&listbox_search_suggestions, search_suggestions[i].name);
+		if (wcslen(search_suggestions[i].first_air_date) > 4) {
+			wchar_t buf[1024];
+			wsprintf(buf, L"%ls (%.4ls)", search_suggestions[i].name, search_suggestions[i].first_air_date);
+			LISTBOX_add_string(&listbox_search_suggestions, buf);
+		} else {
+			LISTBOX_add_string(&listbox_search_suggestions, search_suggestions[i].name);
+		}
 	}
 
 	BUTTON_set_enabled(&button_add, false);

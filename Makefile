@@ -38,10 +38,10 @@ clean:
 	rm -r obj/*
 
 copy:
-	cp bin/${EXE} /mnt/f/
+	cp bin/${EXE} /mnt/e/
 
 run: copy
-	/mnt/f/Win32App.exe
+	/mnt/e/Win32App.exe
 
 # Create build output directories if they don't exist
 bin obj:

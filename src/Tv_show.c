@@ -2,11 +2,12 @@
 
 #include "util/str_util.h"
 
-bool TV_SHOW_create(Tv_show *tv_show, int64_t id, const char *name)
+bool TV_SHOW_create(Tv_show *tv_show, int64_t id, const char *name, const char *first_air_date)
 {
     *tv_show = (Tv_show) {0};
     tv_show->id = id;
     tv_show->name = STR_UTIL_convert(name);
+    tv_show->first_air_date = STR_UTIL_convert(first_air_date);
 
     return tv_show->name != NULL;
 }

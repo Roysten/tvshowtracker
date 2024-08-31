@@ -152,9 +152,9 @@ static bool parse_search_show_json(const char* json_txt, Tv_show *show_storage, 
 	// First cleanup results from previous search
 	for (int i = 0; i < show_storage_len; ++i) {
 		if (show_storage[i].id == 0) {
-            break;
+			break;
 		}
-        TV_SHOW_destroy(&show_storage[i]);
+		TV_SHOW_destroy(&show_storage[i]);
 	}
 
 	json_stream stream;
@@ -197,6 +197,7 @@ static bool parse_search_show_info_json(json_stream *stream, Tv_show *show)
 
 	int64_t show_id = 0;
 	char *show_name = NULL;
+	char *show_first_air_date = NULL;
 
 	for (enum json_type event = json_next(stream); event != JSON_OBJECT_END;) {
 		if (json_streq(stream, "name")) {
@@ -206,6 +207,9 @@ static bool parse_search_show_info_json(json_stream *stream, Tv_show *show)
 		} else if (json_streq(stream, "id")) {
 			event = json_next(stream);
 			show_id = json_get_number(stream);
+		} else if (json_streq(stream, "first_air_date")) {
+			event = json_next(stream);
+			show_first_air_date = strdup(json_get_string(stream, NULL));
 		} else {
 			event = json_skip(stream);
 		}
@@ -213,11 +217,15 @@ static bool parse_search_show_info_json(json_stream *stream, Tv_show *show)
 
 	bool result = false;
 	if (show_id != 0 && show_name != NULL) {
-		result = TV_SHOW_create(show, show_id, show_name);
+		result = TV_SHOW_create(show, show_id, show_name, show_first_air_date);
 	}
 
 	if (show_name != NULL) {
 		free(show_name);
+	}
+
+	if (show_first_air_date != NULL) {
+		free(show_first_air_date);
 	}
 
 	return result;
@@ -421,7 +429,7 @@ static time_t parse_date(const char *date_txt)
 	return _mkgmtime(&tm);
 }
 
-void REQUESTER_THREAD_refresh_shows(Requester_thread *thread, Vec shows, 
+void REQUESTER_THREAD_refresh_shows(Requester_thread *thread, Vec shows,
 	Show_info_callback progress_callback, Show_refresh_all_finished_callback finished_callback)
 {
 	Context_refresh_shows *context = malloc(sizeof(*context));
